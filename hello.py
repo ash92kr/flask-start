@@ -1,5 +1,7 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import random
+from bs4 import BeautifulSoup
+import requests
 app = Flask(__name__)
 
 @app.route("/")
@@ -57,5 +59,90 @@ def dinner():
     return render_template("dinner.html", pick = pick, url = url)
     
     
+@app.route("/lotto")
+def lotto():
+    list = [i for i in range(1, 46)]   # list = list(range(1,46))
+    pick = random.sample(list, 6)
+    return render_template("lotto.html", pick = sorted(pick))
     
     
+@app.route("/naver")
+def naver():
+    return render_template("naver.html")
+
+@app.route("/google")
+def google():
+    return render_template("google.html")
+
+@app.route("/daum")
+def daum():
+    return render_template("daum.html")
+    
+@app.route("/bing")
+def bing():
+    return render_template("bing.html")
+
+
+@app.route("/ping")
+def ping():
+    return render_template("ping.html")
+    
+@app.route("/pong")
+def pong():
+    pingpong = request.args.get('ping')  # ping에서 입력한 값을 pingpong에 넣음
+    return render_template("pong.html", pingpong = pingpong)
+
+
+# opgg
+# 1. id가 없는 경우
+# 2. id가 있는데 tear(rank)가 없는 경우
+# 3. id와 tear가 있는 경우
+
+# 1. 소환사가 있는지 없는지, 있다면 승리수 출력
+# 2. 소환사가 있으나 랭크전적이 없을 때
+
+@app.route("/sohwan")
+def sohwan():
+    # req = requests.get("http://www.op.gg/summoner/userName={0}".format(id)).text 
+    # soup = BeautifulSoup(req, 'html.parser')
+    # rank = soup.select_one("#SummonerLayoutContent > div > div > div > div > div > div > span")
+    return render_template("sowhan.html")   # 소환사가 있을 때
+
+
+@app.route("/summoner")
+def result():
+    name = request.args.get('name')
+    url = f"http://www.op.gg/summoner/userName={name}"
+    req = requests.get(url).text
+    soup = BeautifulSoup(req, 'html.parser') 
+    summoner = soup.select_one('body > div.l-wrap.l-wrap--summoner > div.l-container > div > div > div.Header > div.Profile > div.Information > span')
+    wins = soup.select_one('#SummonerLayoutContent > div.tabItem.Content.SummonerLayoutContent.summonerLayout-summary > div.SideContent > div.TierBox.Box > div.SummonerRatingMedium > div.TierRankInfo > div.TierInfo > span.WinLose > span.wins')
+    tier = soup.select_one('#SummonerLayoutContent > div.tabItem.Content.SummonerLayoutContent.summonerLayout-summary > div.SideContent > div.TierBox.Box > div > div.TierRankInfo > div > span')
+    
+    if summoner:
+        if tier.text == "Unranked":
+            return render_template("notier.html", name=name)
+        else:
+            return render_template("opgg.html", name=name, wins=wins.text)
+    else:
+        return render_template("nouser.html", name=name)
+        
+    # id = request.args.get('opgg')
+    # rank = request.args.get('opgg')
+    # if type(id) == None:
+    #     return render_template("result.html")
+    # elif id not in None and type(rank) == None:
+    #     return render_template("result2.html")
+    # else:
+    #     return render_template("result3.html")
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080, debug=True)
+
+
+
+
+    
+
+
