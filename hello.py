@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for, redirect, flash
 import random
 from bs4 import BeautifulSoup
 import requests
@@ -121,11 +121,17 @@ def result():
     
     if summoner:
         if tier.text == "Unranked":
-            return render_template("notier.html", name=name)
+            flash(f"{name} 소환사는 랭크 전적이 없습니다.")
+            # flash 메시지 보여주기 - 사이트 이름이 아니라 함수 이름을 적는다
+            return redirect(url_for('sohwan'))
+            # return render_template("notier.html", name=name)
         else:
             return render_template("opgg.html", name=name, wins=wins.text)
     else:
-        return render_template("nouser.html", name=name)
+        flash(f"{name}을 가진 소환사가 없습니다.")
+        # flash 메시지 보여주기
+        return redirect(url_for('sohwan'))
+        # return render_template("nouser.html", name=name)
         
     # id = request.args.get('opgg')
     # rank = request.args.get('opgg')
@@ -138,6 +144,7 @@ def result():
 
 
 if __name__ == "__main__":
+    app.secret_key = "master_key"   # flask 문법에 따라 입력하면됨(""는 마음대로 입력)
     app.run(host="0.0.0.0", port=8080, debug=True)
 
 
